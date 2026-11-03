@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShopSphere — Moderator Panel</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>" />
+</head>
+<body>
+  
+  <div class="login-wrap hidden" id="loginGate">
+    <div class="login-card">
+      <div class="logo"><span class="logo__mark">S</span><span><b>Shop</b><em>Sphere</em></span></div>
+      <h2 style="margin:6px 0">Moderator Access</h2>
+      <p style="color:var(--muted);margin-bottom:16px">Sign in with an account assigned the moderator role in Supabase.</p>
+      <form id="loginForm">
+        <div class="field"><label for="moderatorEmail">Email address or WhatsApp number</label><input type="text" id="moderatorEmail" placeholder="Email address or WhatsApp number" autocomplete="username" required /></div>
+        <div class="field"><label for="moderatorPassword">Password</label><input type="password" id="moderatorPassword" autocomplete="current-password" required /></div>
+        <button class="btn btn--primary btn--block" type="submit">Sign in as Moderator</button>
+      </form>
+      <a href="index.html" style="color:var(--orange-dark);font-weight:700;font-size:.85rem;display:inline-block;margin-top:10px">← Back to Store</a>
+    </div>
+  </div>
+
+  <div class="admin-shell hidden" id="adminShell">
+    
+    <aside class="admin-side" id="adminSide">
+      <div class="logo"><span class="logo__mark">S</span><span><b>Shop</b>Moderator</span></div>
+      <nav class="admin-nav">
+        <button data-view="dashboard" class="active">📊 Dashboard</button>
+        <button data-view="products">📦 All Listings</button>
+        <button data-view="orders">🧾 Orders</button>
+        <button data-view="users">👥 Sellers &amp; Users</button>
+        <button data-view="banners">📢 Ad Banners</button>
+      </nav>
+      <div style="margin-top:24px;border-top:1px solid rgba(255,255,255,.1);padding-top:16px">
+        <div class="admin-nav">
+          <button type="button" onclick="location.href='index.html'">🏬 View Store</button>
+          <button type="button" id="btnLogout" style="color:#ffb4b4">🚪 Logout</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="hamburger admin-menu-btn" id="btnAdminMenu">☰</button>
+          <h1 id="viewTitle">Dashboard</h1>
+        </div>
+        <button class="btn btn--primary" id="btnNewProduct">＋ Add Listing</button>
+      </div>
+
+      <section id="view-dashboard">
+        <div class="stats" id="statCards"></div>
+        <div class="panel">
+          <h3>👥 Registered Sellers</h3>
+          <div class="table-wrap"><table class="data" id="lowStockTable"></table></div>
+        </div>
+        <div class="panel">
+          <h3>🕒 Recent Platform Listings</h3>
+          <div class="table-wrap"><table class="data" id="recentOrders"></table></div>
+        </div>
+      </section>
+
+      <section id="view-products" class="hidden">
+        <div class="panel">
+          <h3>All Platform Products</h3>
+          <div class="table-wrap"><table class="data" id="productsTable"></table></div>
+        </div>
+      </section>
+
+      <section id="view-orders" class="hidden">
+        <div class="panel">
+          <h3>Platform Orders</h3>
+          <div class="field"><label for="ordersFilter">Find an order</label><input id="ordersFilter" type="search" placeholder="Reference, customer, phone, or status" /></div>
+          <div class="table-wrap"><table class="data" id="platformOrdersTable"></table></div>
+        </div>
+      </section>
+
+      <section id="view-users" class="hidden">
+        <div class="panel">
+          <h3>Accounts</h3>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <button type="button" class="btn btn--primary btn--sm" data-account-tab="sellers">Seller Approval</button>
+            <button type="button" class="btn btn--ghost btn--sm" data-account-tab="customers">Customer Accounts</button>
+          </div>
+          <div class="table-wrap" id="sellerAccountsPanel">
+            <table class="data" id="sellerAccountsTable"></table>
+          </div>
+          <div class="table-wrap hidden" id="customerAccountsPanel">
+            <table class="data" id="customerAccountsTable"></table>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-banners" class="hidden">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+            <h3 style="margin:0">Homepage Ad Banners</h3>
+            <button type="button" class="btn btn--primary btn--sm" id="btnNewBanner">＋ New Banner</button>
+          </div>
+          <p style="color:var(--muted);font-size:.88rem;margin-bottom:12px">Live banners appear first in the homepage carousel. Use a wide image (about 1600×600) and keep important text near the left. Views count once per visitor per session; clicks count every tap on the ad.</p>
+          <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <div class="field" style="margin:0"><label for="bnMax">Max ads shown at once</label><input id="bnMax" type="number" min="1" max="20" step="1" value="4" style="width:110px" /></div>
+            <button type="button" class="btn btn--ghost btn--sm" id="btnSaveMax">Save limit</button>
+            <small id="bnMaxNote" style="color:var(--muted)"></small>
+          </div>
+          <div class="table-wrap"><table class="data" id="bannersTable"></table></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="modal" id="bannerModal">
+    <div class="modal__panel">
+      <div class="modal__head"><h3 id="bannerModalTitle">New Banner</h3><button class="close-x" data-close-modal="bannerModal" aria-label="Close">×</button></div>
+      <div class="modal__body">
+        <form id="bannerForm">
+          <input type="hidden" id="bnId" />
+          <div class="field"><label for="bnAdvertiser">Advertiser / business name *</label><input id="bnAdvertiser" placeholder="e.g. Ama's Kitchen" required /></div>
+          <div class="grid-2">
+            <div class="field"><label for="bnHeadline">Headline (optional)</label><input id="bnHeadline" placeholder="e.g. Jollof + chicken GH₵25" maxlength="80" /></div>
+            <div class="field"><label for="bnButton">Button text</label><input id="bnButton" value="Order now" maxlength="24" /></div>
+          </div>
+          <div class="field"><label for="bnSubtext">Short text (optional)</label><input id="bnSubtext" placeholder="e.g. Free delivery to all halls" maxlength="140" /></div>
+          <div class="field"><label for="bnImage">Ad image</label><input type="file" id="bnImage" accept="image/*" /><small>Wide image, about 1600×600. Leave blank to keep the current image.</small><div id="bnImagePreview" class="thumb-list"></div>
+            <label style="display:flex;gap:6px;align-items:center;margin-top:6px;font-weight:600"><input type="checkbox" id="bnRemoveImage" style="width:auto" /> Remove current image</label></div>
+          <div class="grid-2">
+            <div class="field"><label for="bnWhatsapp">Advertiser WhatsApp</label><input id="bnWhatsapp" type="tel" placeholder="0597787700" /></div>
+            <div class="field"><label for="bnLink">…or website link</label><input id="bnLink" type="url" placeholder="https://" /></div>
+          </div>
+          <small style="display:block;margin:-6px 0 10px;color:var(--muted)">Add a WhatsApp number or a link (WhatsApp wins if both are filled).</small>
+          <div class="grid-2">
+            <div class="field"><label for="bnStart">Starts (blank = immediately)</label><input id="bnStart" type="datetime-local" /></div>
+            <div class="field"><label for="bnEnd">Ends (blank = never)</label><input id="bnEnd" type="datetime-local" /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label for="bnOrder">Order (smaller = earlier)</label><input id="bnOrder" type="number" step="1" value="0" /></div>
+            <div class="field"><label style="display:flex;gap:8px;align-items:center;margin-top:26px;font-weight:700"><input type="checkbox" id="bnActive" checked style="width:auto" /> Switched on</label></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button type="submit" class="btn btn--green" id="btnSaveBanner">Save Banner</button>
+            <button type="button" class="btn btn--ghost" data-close-modal="bannerModal">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="productModal">
+    <div class="modal__panel">
+      <div class="modal__head"><h3 id="productModalTitle">Add Listing</h3><button class="close-x" data-close-modal="productModal" aria-label="Close">×</button></div>
+      <div class="modal__body">
+        <form id="productForm">
+          <input type="hidden" id="pId" />
+          <div class="field"><label for="pSeller">Seller *</label><select id="pSeller" required></select></div>
+          <div class="grid-2">
+            <div class="field"><label for="pTitle">Title *</label><input id="pTitle" required /></div>
+            <div class="field"><label for="pCategory">Category *</label><select id="pCategory" required></select></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label for="pPrice">Price *</label><input id="pPrice" type="number" min="0" step="0.01" required /></div>
+            <div class="field"><label for="pDiscount">Discount price</label><input id="pDiscount" type="number" min="0" step="0.01" value="0" /></div>
+          </div>
+          <div class="field"><label for="pStock">Stock quantity *</label><input id="pStock" type="number" min="0" step="1" required /></div>
+          <div class="field"><label for="pDescription">Description</label><textarea id="pDescription"></textarea></div>
+          <div class="field"><label for="pSpecs">Specifications (one per line)</label><textarea id="pSpecs"></textarea></div>
+          <div class="field"><label for="pImages">Product photos</label><input type="file" id="pImages" accept="image/*" multiple /><small id="pImageHelp">Choose one or more images. When editing, leave blank to keep current images.</small><div id="pImagePreview" class="thumb-list"></div></div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button type="submit" class="btn btn--green" id="btnSaveProduct">Save Listing</button>
+            <button type="button" class="btn btn--ghost" data-close-modal="productModal">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="orderModal">
+    <div class="modal__panel modal__panel--sm">
+      <div class="modal__head"><h3>Order Details</h3><button class="close-x" data-close-modal="orderModal" aria-label="Close">×</button></div>
+      <div class="modal__body" id="orderModalBody"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="toast-host" id="toastHost"></div>
+  <script src="common.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

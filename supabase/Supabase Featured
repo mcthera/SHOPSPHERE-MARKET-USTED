@@ -1,0 +1,75 @@
+-- =====================================================================
+-- ShopSphere — Ad cap + Featured listings + Verified sellers
+-- Run once in Supabase → SQL Editor. Needs supabase-setup.sql run first
+-- (and supabase-banners.sql for the ad cap to matter). Safe to re-run.
+-- =====================================================================
+
+-- ---------- site settings (e.g. how many banners show at once) ----------
+create table if not exists public.site_settings (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.site_settings enable row level security;
+drop policy if exists "settings_select" on public.site_settings;
+drop policy if exists "settings_insert" on public.site_settings;
+drop policy if exists "settings_update" on public.site_settings;
+drop policy if exists "settings_delete" on public.site_settings;
+create policy "settings_select" on public.site_settings for select using (true);
+create policy "settings_insert" on public.site_settings for insert with check (public.is_moderator());
+create policy "settings_update" on public.site_settings for update
+  using (public.is_moderator()) with check (public.is_moderator());
+create policy "settings_delete" on public.site_settings for delete using (public.is_moderator());
+insert into public.site_settings (key, value) values ('max_banners', '4') on conflict (key) do nothing;
+
+-- ---------- new columns ----------
+alter table public.profiles add column if not exists verified boolean not null default false;
+alter table public.products add column if not exists featured_until timestamptz;
+alter table public.products add column if not exists seller_verified boolean not null default false;
+
+-- users can't verify themselves
+create or replace function public.guard_profile_update()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is not null and not public.is_moderator() then
+    new.role := old.role;
+    new.seller_status := old.seller_status;
+    new.verified := old.verified;
+  end if;
+  return new;
+end $$;
+
+-- sellers can't feature their own listings or fake the verified badge
+create or replace function public.products_guard()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' then
+    new.seller_verified := coalesce((select verified from public.profiles where id = new.seller_id), false);
+    if auth.uid() is not null and not public.is_moderator() then
+      new.featured_until := null;
+    end if;
+  elsif auth.uid() is not null and not public.is_moderator() then
+    new.featured_until := old.featured_until;
+    new.seller_verified := old.seller_verified;
+  end if;
+  return new;
+end $$;
+drop trigger if exists products_guard on public.products;
+create trigger products_guard before insert or update on public.products
+  for each row execute function public.products_guard();
+
+-- when a moderator verifies / un-verifies a seller, update all of that seller's listings
+create or replace function public.sync_seller_verified()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.verified is distinct from old.verified then
+    update public.products set seller_verified = new.verified where seller_id = new.id;
+  end if;
+  return new;
+end $$;
+drop trigger if exists sync_seller_verified on public.profiles;
+create trigger sync_seller_verified after update of verified on public.profiles
+  for each row execute function public.sync_seller_verified();
+
+update public.products p set seller_verified = pr.verified
+from public.profiles pr where pr.id = p.seller_id;
