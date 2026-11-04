@@ -65,48 +65,51 @@
   </header>
  
   <!-- ============ SLIDE-OUT MENU ============ -->
-  <aside class="drawer drawer--left" id="mobileDrawer" aria-label="Menu">
-    <div class="drawer__head drawer__head--brand">
-      <div class="drawer__user">
-        <span class="avatar" id="drawerAvatar">S</span>
-        <div>
-          <strong id="drawerUserName">Welcome</strong>
-          <small id="drawerUserSub">Sign in or Join as Seller</small>
-        </div>
+<aside class="drawer drawer--left" id="mobileDrawer" aria-label="Menu">
+  <div class="drawer__head drawer__head--brand">
+    <div class="drawer__user">
+      <span class="avatar" id="drawerAvatar">S</span>
+      <div>
+        <strong id="drawerUserName">Welcome</strong>
+        <small id="drawerUserSub">Sign in or Join as Seller</small>
       </div>
-      <button class="close-x" data-close="mobileDrawer" aria-label="Close menu">×</button>
     </div>
+    <button class="close-x" data-close="mobileDrawer" aria-label="Close menu">×</button>
+  </div>
  
-    <div class="drawer__body">
-      <nav class="menu" aria-label="Account and selling">
-        <button type="button" class="menu__item menu__item--primary" id="btnSellerSignupPrompt">
-          <span class="menu__icon">📢</span><span>Become a Seller</span>
-        </button>
-        <button type="button" class="menu__item" id="btnAuth">
-          <span class="menu__icon">👤</span><span id="authLabel">Customer Login / sign up</span>
-        </button>
-        <button type="button" class="menu__item" id="btnDrawerTrack">
-          <span class="menu__icon">📦</span><span>Track My Orders</span>
-        </button>
-        <button type="button" class="menu__item hidden" id="btnDrawerSellerDashboard">
-          <span class="menu__icon">📊</span><span>Seller Dashboard</span>
-        </button>
-        <button type="button" class="menu__item" id="btnDrawerAdmin" style="background: var(--red-deep); color: #fff; margin-top: 6px;">
-          <span class="menu__icon" style="background: rgba(255,255,255,.22);">🔧</span><span>Moderator Panel</span>
-        </button>
-         <!--
-        <label class="menu__row" for="currencySel">
-          <span class="menu__lead"><span class="menu__icon">💱</span><span>Currency</span></span>
-          <select id="currencySel" aria-label="Currency">
-            <option value="GHS">GHS (GH₵)</option>
-            <option value="NGN">NGN (₦)</option>
-            <option value="USD">USD ($)</option>
-          </select>
-        </label>
-      -->
-      </nav>
-    </div>
-  </aside>
+  <div class="drawer__body">
+    <nav class="menu" aria-label="Account and selling">
+      <button type="button" class="menu__item menu__item--primary" id="btnSellerSignupPrompt">
+        <span class="menu__icon">📢</span><span>Become a Seller</span>
+      </button>
+
+      <!-- 1. Log in / Log out Tab -->
+      <button type="button" class="menu__item" id="btnAuth">
+        <span class="menu__icon">👤</span><span id="authLabel">Customer Login / sign up</span>
+      </button>
+
+      <!-- 2. Cart Button Tab -->
+      <button type="button" class="menu__item" id="btnDrawerCart">
+        <span class="menu__icon">🛒</span><span>View Cart</span>
+      </button>
+
+      <!-- 3. Help / Support Button Tab -->
+      <button type="button" class="menu__item" id="btnDrawerHelp" onclick="window.open('https://wa.me/233554166822?text=Hello%20ShopSphere%20Support,%20I%20need%20help.', '_blank')">
+        <span class="menu__icon">💬</span><span>Help & Support</span>
+      </button>
+
+      <button type="button" class="menu__item" id="btnDrawerTrack">
+        <span class="menu__icon">📦</span><span>Track My Orders</span>
+      </button>
+      <button type="button" class="menu__item hidden" id="btnDrawerSellerDashboard">
+        <span class="menu__icon">📊</span><span>Seller Dashboard</span>
+      </button>
+      <button type="button" class="menu__item" id="btnDrawerAdmin" style="background: var(--red-deep); color: #fff; margin-top: 6px;">
+        <span class="menu__icon" style="background: rgba(255,255,255,.22);">🔧</span><span>Moderator Panel</span>
+      </button>
+    </nav>
+  </div>
+</aside>
  
   <main class="container">
  
