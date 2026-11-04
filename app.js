@@ -491,14 +491,8 @@
 
       await Promise.all([...sellerPhones].map(async (phone) => {
         try {
-          const { data, error } = await S.supabase.functions.invoke("send-sms", {
-            body: {
-              to: phone,
-              message: `[ShopSphere] New Order Alert! Ref: ${order.reference}. Total: GHc${order.total}. Check WhatsApp/seller portal to fulfill.`,
-            },
-          });
-          if (error) console.error("Error invoking SMS function:", error);
-          else console.log("SMS Edge Function Response:", data);
+          const data = await S.sendSellerSMS(phone, order.reference, order.total);
+          console.log("SMS Edge Function Response:", data);
         } catch (err) {
           console.warn("Failed to trigger SMS alert:", err);
         }

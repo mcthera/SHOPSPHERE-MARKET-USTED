@@ -313,6 +313,20 @@
     return data || [];
   }
 
+  async function sendSellerSMS(sellerPhone, orderRef, totalAmount) {
+    const cleanPhone = whatsappNumber(sellerPhone);
+    if (!cleanPhone) return;
+
+    const { data, error } = await supabase.functions.invoke("send-sms", {
+      body: {
+        to: cleanPhone,
+        message: `[ShopSphere] New Order Alert! Ref: ${orderRef}. Total: GHc${totalAmount}. Check WhatsApp/portal to fulfill.`,
+      },
+    });
+    if (error) throw error;
+    return data;
+  }
+
   async function updateOrderStatus(orderId, status) {
     const { data, error } = await supabase.rpc("update_order_status", { p_order_id: orderId, p_status: status });
     if (error) throw error;
@@ -430,7 +444,7 @@
     supabase, CATEGORIES, CURRENCIES,
     signUp, signIn, signInAnonymously, signOut, getCurrentUser,
     getProducts, createProduct, updateSellerProduct, updateSellerStock, deleteProduct, uploadImages,
-    createOrder, getOrder, getMyOrders, getSellerOrders, updateOrderStatus,
+    createOrder, getOrder, getMyOrders, getSellerOrders, sendSellerSMS, updateOrderStatus,
     getCart, saveCart, formatPrice, getCurrency, setCurrency,
     toast, whatsappNumber, friendlyError, phoneToEmail,
     isBannerLive, getLiveBanners, getMaxBanners, trackBanner,
