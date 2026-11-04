@@ -480,7 +480,24 @@
         if (!currentUser) throw new Error("Could not start a guest checkout session.");
         updateAuthUI();
       }
-      const order = await S.createOrder(customer, cart);
+      //const order = await S.createOrder(customer, cart);
+      // SMS INTEGRATION
+      // Inside submitWhatsAppOrder(event) in app.js:
+const order = await S.createOrder(customer, cart);
+
+// Collect unique seller phone numbers from items in the cart
+const sellerPhones = new Set();
+cart.forEach((item) => {
+  const product = loadedProducts.find((p) => p.id === item.id);
+  if (product && product.seller_phone) {
+    sellerPhones.add(product.seller_phone);
+  }
+});
+
+// Send an instant SMS alert to each seller
+sellerPhones.forEach((phone) => {
+  S.sendSellerSMS(phone, order.reference, order.total);
+});
       const message = [
         "*New ShopSphere Campus Order* 🛒",
         `Order Reference ID: *${order.reference}*`,
