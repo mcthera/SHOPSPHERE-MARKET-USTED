@@ -313,6 +313,26 @@
     return data || [];
   }
 
+  // Asks the "send-sms" Edge Function (Arkesel) to text the store owner(s) of this order.
+  // Only the order id is sent; the server works out who to text and what to say.
+  // Never throws: a failed SMS must not break checkout. Check the Console for the reason.
+  async function notifyOrder(orderId) {
+    try {
+      const { data, error } = await supabase.functions.invoke("send-sms", { body: { order_id: orderId } });
+      if (error) {
+        let detail = error.message;
+        try { detail = JSON.stringify(await error.context.json()); } catch (_) { /* response had no JSON body */ }
+        console.warn("Order SMS failed:", detail);
+        return { ok: false, error: detail };
+      }
+      console.log("Order SMS result:", data);
+      return data;
+    } catch (err) {
+      console.warn("Order SMS failed:", err);
+      return { ok: false, error: String(err?.message || err) };
+    }
+  }
+
   async function updateOrderStatus(orderId, status) {
     const { data, error } = await supabase.rpc("update_order_status", { p_order_id: orderId, p_status: status });
     if (error) throw error;
@@ -430,7 +450,7 @@
     supabase, CATEGORIES, CURRENCIES,
     signUp, signIn, signInAnonymously, signOut, getCurrentUser,
     getProducts, createProduct, updateSellerProduct, updateSellerStock, deleteProduct, uploadImages,
-    createOrder, getOrder, getMyOrders, getSellerOrders, updateOrderStatus,
+    createOrder, getOrder, getMyOrders, getSellerOrders, notifyOrder, updateOrderStatus,
     getCart, saveCart, formatPrice, getCurrency, setCurrency,
     toast, whatsappNumber, friendlyError, phoneToEmail,
     isBannerLive, getLiveBanners, getMaxBanners, trackBanner,

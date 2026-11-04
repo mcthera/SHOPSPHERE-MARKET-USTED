@@ -482,27 +482,7 @@
       }
       const order = await S.createOrder(customer, cart);
 
-      const sellerPhones = new Set();
-      cart.forEach((item) => {
-        const product = loadedProducts.find((entry) => entry.id === item.id);
-        const phone = product && S.whatsappNumber(product.seller_phone);
-        if (phone) sellerPhones.add(phone);
-      });
-
-      await Promise.all([...sellerPhones].map(async (phone) => {
-        try {
-          const { data, error } = await S.supabase.functions.invoke("send-sms", {
-            body: {
-              to: phone,
-              message: `[ShopSphere] New Order Alert! Ref: ${order.reference}. Total: GHc${order.total}. Check WhatsApp/seller portal to fulfill.`,
-            },
-          });
-          if (error) console.error("Error invoking SMS function:", error);
-          else console.log("SMS Edge Function Response:", data);
-        } catch (err) {
-          console.warn("Failed to trigger SMS alert:", err);
-        }
-      }));
+      S.notifyOrder(order.id); // not awaited: checkout must never wait for an SMS
       const message = [
         "*New ShopSphere Campus Order* 🛒",
         `Order Reference ID: *${order.reference}*`,
