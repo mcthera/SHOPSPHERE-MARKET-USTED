@@ -149,7 +149,6 @@
     return (data || []).map(mapProduct);
   }
 
-  // Shrinks big phone photos before upload (falls back to the original file on any problem).
   async function compressImage(file, maxSize = 1280, quality = 0.82) {
     try {
       if (!file.type.startsWith("image/") || file.type === "image/gif") return file;
@@ -313,26 +312,6 @@
     return data || [];
   }
 
-  // Asks the "send-sms" Edge Function (Arkesel) to text the store owner(s) of this order.
-  // Only the order id is sent; the server works out who to text and what to say.
-  // Never throws: a failed SMS must not break checkout. Check the Console for the reason.
-  async function notifyOrder(orderId) {
-    try {
-      const { data, error } = await supabase.functions.invoke("send-sms", { body: { order_id: orderId } });
-      if (error) {
-        let detail = error.message;
-        try { detail = JSON.stringify(await error.context.json()); } catch (_) { /* response had no JSON body */ }
-        console.warn("Order SMS failed:", detail);
-        return { ok: false, error: detail };
-      }
-      console.log("Order SMS result:", data);
-      return data;
-    } catch (err) {
-      console.warn("Order SMS failed:", err);
-      return { ok: false, error: String(err?.message || err) };
-    }
-  }
-
   async function updateOrderStatus(orderId, status) {
     const { data, error } = await supabase.rpc("update_order_status", { p_order_id: orderId, p_status: status });
     if (error) throw error;
@@ -358,7 +337,6 @@
     return (data || []).filter((banner) => isBannerLive(banner));
   }
 
-  // how many ad banners the homepage may show at once (moderator setting, default 4)
   async function getMaxBanners() {
     try {
       const { data, error } = await supabase.from("site_settings").select("value").eq("key", "max_banners").maybeSingle();
@@ -366,12 +344,11 @@
       const value = Number.parseInt(data?.value, 10);
       return Number.isInteger(value) && value >= 1 && value <= 20 ? value : 4;
     } catch (err) {
-      console.warn("Using default banner cap (run supabase-featured.sql):", err.message || err);
+      console.warn("Using default banner cap:", err.message || err);
       return 4;
     }
   }
 
-  // fire-and-forget: a counting problem must never break the page
   function trackBanner(id, event) {
     if (!id) return;
     try {
@@ -388,7 +365,7 @@
       .catch((err) => console.warn("Banner tracking failed:", err));
   }
 
-  // ---------- cart (persisted in this browser) ----------
+  // ---------- cart ----------
   function getCart() {
     try {
       const parsed = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
@@ -450,7 +427,7 @@
     supabase, CATEGORIES, CURRENCIES,
     signUp, signIn, signInAnonymously, signOut, getCurrentUser,
     getProducts, createProduct, updateSellerProduct, updateSellerStock, deleteProduct, uploadImages,
-    createOrder, getOrder, getMyOrders, getSellerOrders, notifyOrder, updateOrderStatus,
+    createOrder, getOrder, getMyOrders, getSellerOrders, updateOrderStatus,
     getCart, saveCart, formatPrice, getCurrency, setCurrency,
     toast, whatsappNumber, friendlyError, phoneToEmail,
     isBannerLive, getLiveBanners, getMaxBanners, trackBanner,
