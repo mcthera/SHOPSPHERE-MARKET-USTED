@@ -482,21 +482,7 @@
       }
       const order = await S.createOrder(customer, cart);
 
-      const sellerPhones = new Set();
-      cart.forEach((item) => {
-        const product = loadedProducts.find((entry) => entry.id === item.id);
-        const phone = product && S.whatsappNumber(product.seller_phone);
-        if (phone) sellerPhones.add(phone);
-      });
-
-      await Promise.all([...sellerPhones].map(async (phone) => {
-        try {
-          const data = await S.sendSellerSMS(phone, order.reference, order.total);
-          console.log("SMS Edge Function Response:", data);
-        } catch (err) {
-          console.warn("Failed to trigger SMS alert:", err);
-        }
-      }));
+      S.notifyOrder(order.id); // not awaited: checkout must never wait for an SMS
       const message = [
         "*New ShopSphere Campus Order* 🛒",
         `Order Reference ID: *${order.reference}*`,
