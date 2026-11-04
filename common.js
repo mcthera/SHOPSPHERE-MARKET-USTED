@@ -313,32 +313,6 @@
     return data || [];
   }
 
-  async function sendSellerSMS(sellerPhone, orderRef, totalAmount) {
-    const ARKESEL_API_KEY = "YOUR_ARKESEL_API_KEY_HERE";
-    const SENDER_ID = "Arkesel";
-    const cleanPhone = whatsappNumber(sellerPhone);
-    if (!cleanPhone) return;
-
-    const message = `[ShopSphere] New Order Alert! Ref: ${orderRef}. Total: GHc${totalAmount}. Please check your WhatsApp/seller portal to fulfill.`;
-
-    try {
-      const response = await fetch("https://sms.arkesel.com/sms/api", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "api-key": ARKESEL_API_KEY },
-        body: JSON.stringify({
-          action: "send-sms",
-          to: cleanPhone,
-          from: SENDER_ID,
-          sms: message,
-        }),
-      });
-      const result = await response.json();
-      console.log("Arkesel SMS Response:", result);
-    } catch (err) {
-      console.warn("Could not send SMS alert to seller:", err);
-    }
-  }
-
   async function updateOrderStatus(orderId, status) {
     const { data, error } = await supabase.rpc("update_order_status", { p_order_id: orderId, p_status: status });
     if (error) throw error;
@@ -457,7 +431,6 @@
     signUp, signIn, signInAnonymously, signOut, getCurrentUser,
     getProducts, createProduct, updateSellerProduct, updateSellerStock, deleteProduct, uploadImages,
     createOrder, getOrder, getMyOrders, getSellerOrders, updateOrderStatus,
-    sendSellerSMS,
     getCart, saveCart, formatPrice, getCurrency, setCurrency,
     toast, whatsappNumber, friendlyError, phoneToEmail,
     isBannerLive, getLiveBanners, getMaxBanners, trackBanner,
