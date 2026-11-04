@@ -23,17 +23,21 @@ create table if not exists public.banners (
 
 alter table public.banners enable row level security;
 drop policy if exists "banners_select" on public.banners;
+drop policy if exists "banners_select_live" on public.banners;
+drop policy if exists "banners_select_moderator" on public.banners;
 drop policy if exists "banners_insert" on public.banners;
 drop policy if exists "banners_update" on public.banners;
 drop policy if exists "banners_delete" on public.banners;
 
--- visitors only ever see banners that are switched on and inside their dates; moderators see all
-create policy "banners_select" on public.banners for select using (
-  public.is_moderator()
-  or (is_active
-      and (starts_at is null or starts_at <= now())
-      and (ends_at is null or ends_at >= now()))
+-- Public visitors see only currently live banners; this policy does not call moderator-only functions.
+create policy "banners_select_live" on public.banners for select to anon, authenticated using (
+  is_active
+  and (starts_at is null or starts_at <= now())
+  and (ends_at is null or ends_at >= now())
 );
+-- Moderators can also see inactive and scheduled banners in the management panel.
+create policy "banners_select_moderator" on public.banners for select to authenticated
+  using (public.is_moderator());
 create policy "banners_insert" on public.banners for insert with check (public.is_moderator());
 create policy "banners_update" on public.banners for update
   using (public.is_moderator()) with check (public.is_moderator());
