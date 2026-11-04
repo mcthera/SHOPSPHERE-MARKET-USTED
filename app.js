@@ -694,6 +694,11 @@
       $("#gatewayModal").classList.remove("open");
       $("#overlay").classList.remove("open");
     });
+$("#btnDrawerCart").addEventListener("click", () => {
+  closeDrawer("mobileDrawer");
+  openCart();
+});
+
 
     $("#btnGatewaySeller").addEventListener("click", () => {
       window.location.href = "management-seller.html";
