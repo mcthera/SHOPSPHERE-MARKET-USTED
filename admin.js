@@ -17,6 +17,7 @@
   let allProfiles = [];
   let allOrders = [];
   let allBanners = [];
+  let allResets = [];
   let maxBanners = 4;
   let currentModerator = null;
   let wired = false;
@@ -79,7 +80,7 @@
     $$(".admin-nav [data-view]").forEach((button) =>
       button.classList.toggle("active", button.dataset.view === view)
     );
-    ["dashboard", "products", "orders", "users", "banners"].forEach((name) =>
+    ["dashboard", "products", "orders", "users", "banners", "resets"].forEach((name) =>
       $("#view-" + name).classList.toggle("hidden", name !== view)
     );
     $("#viewTitle").textContent = {
@@ -88,6 +89,7 @@
       orders: "Platform Orders",
       users: "Registered Sellers & Users",
       banners: "Homepage Ad Banners",
+      resets: "Password Reset Requests",
     }[view] || "Moderator Overview";
     $("#adminSide").classList.remove("open");
     $("#overlay").classList.remove("open");
@@ -112,6 +114,7 @@
       S.toast(`Some data could not load (${problems.join("; ")}). Run supabase-setup.sql if you haven't.`, "error", 9000);
     }
     await loadBanners();
+    await loadResets();
     renderModeratorDashboard();
     renderAllProductsTable();
     renderUsersTable();
@@ -729,6 +732,137 @@
     }
   }
 
+  // ---------- password reset requests ----------
+  async function loadResets() {
+    const { data, error } = await supabase
+      .from("password_reset_requests")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) {
+      console.warn("Could not load password reset requests:", error.message);
+      allResets = [];
+      renderResets(`Could not load requests: ${error.message}. Run password-reset.sql in Supabase first.`);
+      return;
+    }
+    allResets = data || [];
+    renderResets();
+  }
+
+  function renderResets(message) {
+    const openCount = allResets.filter((request) => request.status === "open").length;
+    const navButton = $('.admin-nav [data-view="resets"]');
+    if (navButton) navButton.textContent = openCount ? `🔑 Password Resets (${openCount})` : "🔑 Password Resets";
+
+    const table = $("#resetsTable");
+    if (message || !allResets.length) {
+      table.innerHTML = `<tbody><tr><td style="color:var(--muted)">${escapeHTML(message || "No password reset requests yet.")}</td></tr></tbody>`;
+      return;
+    }
+    table.innerHTML = `<thead><tr><th>Person</th><th>Account</th><th>WhatsApp</th><th>Asked</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${allResets.map((request) => {
+        const profile = allProfiles.find((item) => item.id === request.user_id);
+        const role = profile?.role || "—";
+        const wa = S.whatsappNumber(request.phone);
+        const cls = request.status === "open" ? "Pending" : request.status === "done" ? "Delivered" : "Canceled";
+        let actions = "";
+        if (request.status === "open") {
+          actions = role === "moderator"
+            ? `<small style="color:var(--muted)">Owner resets by hand (SQL)</small> `
+            : `<button class="btn btn--green btn--sm" data-reset-id="${escapeHTML(request.id)}">Reset password</button> `;
+          actions += `<button class="btn btn--ghost btn--sm" data-reset-dismiss="${escapeHTML(request.id)}">Dismiss</button>`;
+        } else if (request.handled_at) {
+          actions = `<small style="color:var(--muted)">${escapeHTML(new Date(request.handled_at).toLocaleString())}</small>`;
+        }
+        return `<tr>
+          <td><strong>${escapeHTML(request.full_name || profile?.full_name || "Unnamed")}</strong></td>
+          <td>${escapeHTML(role)}</td>
+          <td>${wa ? `<a href="https://wa.me/${escapeHTML(wa)}" target="_blank" rel="noopener">${escapeHTML(request.phone || "")}</a>` : escapeHTML(request.phone || "—")}</td>
+          <td><small>${escapeHTML(new Date(request.created_at).toLocaleString())}</small></td>
+          <td><span class="status-pill status-${cls}">${escapeHTML(request.status)}</span></td>
+          <td style="white-space:nowrap">${actions}</td>
+        </tr>`;
+      }).join("")}</tbody>`;
+    $$("[data-reset-id]", table).forEach((button) => button.addEventListener("click", () => resetPassword(button)));
+    $$("[data-reset-dismiss]", table).forEach((button) => button.addEventListener("click", () => dismissReset(button)));
+  }
+
+  async function resetPassword(button) {
+    const request = allResets.find((item) => item.id === button.dataset.resetId);
+    if (!request) return;
+    const who = request.full_name || request.phone || "this person";
+    if (!confirm(`Reset the password for ${who}?\n\nOnly continue if you have confirmed it is really them (for example by calling ${request.phone || "their number"}).`)) return;
+    button.disabled = true;
+    try {
+      const { data, error } = await supabase.functions.invoke("reset-password", { body: { request_id: request.id } });
+      if (error) {
+        let detail = error.message;
+        try { detail = (await error.context.json()).error || detail; } catch (_) { /* no JSON body */ }
+        throw new Error(detail);
+      }
+      if (!data?.ok) throw new Error(data?.error || "The reset did not work.");
+      showTempPassword(data);
+      await loadResets();
+    } catch (err) {
+      console.error("Password reset failed:", err);
+      S.toast(err.message || "Password reset failed.", "error", 8000);
+      button.disabled = false;
+    }
+  }
+
+  async function dismissReset(button) {
+    button.disabled = true;
+    try {
+      const { data, error } = await supabase
+        .from("password_reset_requests")
+        .update({ status: "dismissed", handled_by: currentModerator.id, handled_at: new Date().toISOString() })
+        .eq("id", button.dataset.resetDismiss)
+        .select("id")
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error("Not updated. Check your moderator role.");
+      await loadResets();
+    } catch (err) {
+      console.error("Could not dismiss request:", err);
+      S.toast(err.message || "Could not dismiss the request.", "error");
+      button.disabled = false;
+    }
+  }
+
+  function showTempPassword({ temp_password: password, phone, full_name: name }) {
+    document.getElementById("tempPwModal")?.remove();
+    const wa = S.whatsappNumber(phone);
+    const text = encodeURIComponent(`Hi ${name || ""}, your temporary ShopSphere password is: ${password}\nSign in with it, then choose your own new password when asked.`);
+    const modal = document.createElement("div");
+    modal.id = "tempPwModal";
+    modal.className = "modal";
+    modal.style.cssText = "z-index:3000;background:rgba(0,0,0,.6)";
+    modal.innerHTML = `<div class="modal__panel modal__panel--sm">
+      <div class="modal__head"><h3>Temporary password ready</h3><button type="button" class="close-x" aria-label="Close">×</button></div>
+      <div class="modal__body" style="text-align:center">
+        <p style="color:var(--muted)">For <b>${escapeHTML(name || phone || "the user")}</b>. This is shown <b>once</b>. Send it only to the person you verified.</p>
+        <div id="tempPwValue" style="font-family:monospace;font-size:1.6rem;font-weight:800;letter-spacing:1px;background:var(--red-soft);border:1px dashed var(--red-line);border-radius:12px;padding:14px;margin:12px 0;user-select:all">${escapeHTML(password)}</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button type="button" class="btn btn--ghost btn--block" id="tempPwCopy">📋 Copy password</button>
+          ${wa ? `<a class="btn btn--green btn--block" target="_blank" rel="noopener" href="https://wa.me/${escapeHTML(wa)}?text=${text}">💬 Send on WhatsApp</a>` : ""}
+          <button type="button" class="btn btn--primary btn--block" id="tempPwDone">Done</button>
+        </div>
+      </div></div>`;
+    document.body.appendChild(modal);
+    const close = () => modal.remove();
+    modal.querySelector(".close-x").addEventListener("click", close);
+    modal.querySelector("#tempPwDone").addEventListener("click", close);
+    modal.querySelector("#tempPwCopy").addEventListener("click", async (event) => {
+      try {
+        await navigator.clipboard.writeText(password);
+        event.target.textContent = "✅ Copied!";
+      } catch (_) {
+        S.toast("Press and hold the password to copy it.", "info", 4000);
+      }
+    });
+    requestAnimationFrame(() => modal.classList.add("open"));
+  }
+
   function wireEvents() {
     $$(".admin-nav [data-view]").forEach((button) =>
       button.addEventListener("click", () => switchView(button.dataset.view))
@@ -737,6 +871,7 @@
     $("#productForm").addEventListener("submit", saveProduct);
     $("#btnNewBanner").addEventListener("click", () => openBannerEditor());
     $("#btnSaveMax").addEventListener("click", saveMaxBanners);
+    $("#btnAdminChangePw").addEventListener("click", () => S.openChangePasswordModal());
     $("#bannerForm").addEventListener("submit", saveBanner);
     $("#bnImage").addEventListener("change", (event) => {
       $("#bnImagePreview").innerHTML = [...event.target.files]

@@ -6,6 +6,16 @@
   <meta name="theme-color" content="#c8102e" />
   <title>ShopSphere — Campus Marketplace</title>
   <meta name="description" content="ShopSphere is the campus marketplace where students buy and sell textbooks, gadgets, fashion and room essentials." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ShopSphere" />
+  <meta property="og:title" content="ShopSphere — Campus Marketplace" />
+  <meta property="og:description" content="Buy and sell textbooks, gadgets, fashion and room essentials on campus. Meet up, pay on delivery, chat on WhatsApp." />
+  <meta property="og:url" content="https://mcthera.github.io/SHOPSPHERE-MARKET-USTED/" />
+  <meta property="og:image" content="https://mcthera.github.io/SHOPSPHERE-MARKET-USTED/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="ShopSphere — the campus marketplace" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
@@ -101,6 +111,9 @@
       <button type="button" class="menu__item" id="btnDrawerTrack">
         <span class="menu__icon">📦</span><span>Track My Orders</span>
       </button>
+      <button type="button" class="menu__item hidden" id="btnDrawerChangePw">
+        <span class="menu__icon">🔑</span><span>Change Password</span>
+      </button>
       <button type="button" class="menu__item hidden" id="btnDrawerSellerDashboard">
         <span class="menu__icon">📊</span><span>Seller Dashboard</span>
       </button>
@@ -117,7 +130,7 @@
     <section id="sellerAlertBanner" class="panel" style="background: var(--red-soft); border: 1px solid var(--red-line); margin-top: 16px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
       <div>
         <strong style="color: var(--red-dark); font-size: 1.05rem;">Do you want to sell products on ShopSphere? </strong>
-        <p style="font-size: 0.88rem; color: var(--ink);">Sign up as a seller! Submissions are reviewed & approved by moderators before publishing.</p>
+        <p style="font-size: 0.88rem; color: var(--ink);">Sign up as a seller! New seller accounts are reviewed and approved by moderators before you can post items.</p>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <button type="button" class="btn btn--primary btn--sm" id="btnBannerSellerSignUp">Sign Up as Seller</button>
@@ -189,7 +202,7 @@
         </ul>
       </div>
     </div>
-    <div class="container footer__bottom">© <span id="year"></span> ShopSphere — POWERED by ARKTECH COMPANY</div>
+    <div class="container footer__bottom">© <span id="year"></span> ShopSphere — POWERED by ARKTECH COMPANY · <a href="privacy.html" style="text-decoration:underline">Privacy Notice</a></div>
   </footer>
  
   <!-- ============ OVERLAY / CART / MODALS ============ -->
@@ -281,7 +294,9 @@
             <label for="authPassword" id="passLabel"> Password *</label>
             <input type="password" id="authPassword" placeholder="Password (min. 6 characters)" autocomplete="current-password" minlength="6" required />
           </div>
+          <p id="authForgotWrap" style="text-align:right;margin:-4px 0 12px;font-size:.88rem"><a href="#" id="authForgotLink" style="color:var(--red);font-weight:700">Forgot password?</a></p>
           <button type="submit" class="btn btn--primary btn--block" id="authSubmitBtn">Sign in</button>
+          <p id="authPrivacyNote" class="hidden" style="margin-top:10px;font-size:.8rem;color:var(--muted);text-align:center">By creating an account you agree to our <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--red);font-weight:700">Privacy Notice</a>.</p>
         </form>
         <p style="margin-top:14px;text-align:center;font-size:.88rem">
           <span id="authToggleText">Don't have an account?</span>
