@@ -794,12 +794,8 @@
     if (!confirm(`Reset the password for ${who}?\n\nOnly continue if you have confirmed it is really them (for example by calling ${request.phone || "their number"}).`)) return;
     button.disabled = true;
     try {
-      const { data, error } = await supabase.functions.invoke("reset-password", { body: { request_id: request.id } });
-      if (error) {
-        let detail = error.message;
-        try { detail = (await error.context.json()).error || detail; } catch (_) { /* no JSON body */ }
-        throw new Error(detail);
-      }
+      const { data, error } = await supabase.rpc('reset_user_password', { p_request_id: request.id });
+      if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || "The reset did not work.");
       showTempPassword(data);
       await loadResets();
