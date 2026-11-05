@@ -25,6 +25,7 @@
           <label for="sellerLoginPass">Password</label>
           <input type="password" id="sellerLoginPass" autocomplete="current-password" placeholder="Enter password" required />
         </div>
+        <p style="text-align:right;margin:-4px 0 12px;font-size:.88rem"><a href="#" id="sellerForgotLink" style="color:var(--red);font-weight:700">Forgot password?</a></p>
         <button type="submit" class="btn btn--primary btn--block">Login as Seller</button>
       </form>
       <a href="index.html?signup=seller" class="btn btn--ghost btn--block">Register as a new seller</a>
@@ -45,6 +46,7 @@
         <div class="admin-nav">
           <button type="button" class="hidden" id="btnSellerModeratorPanel">🔧 Moderator Panel</button>
           <button type="button" onclick="location.href='index.html'">🏬 Shopping Home Page</button>
+          <button type="button" id="btnSellerChangePw">🔑 Change My Password</button>
           <button type="button" id="btnSellerLogout" style="color:#ffb4b4">🚪 Logout</button>
         </div>
       </div>

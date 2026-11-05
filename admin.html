@@ -34,10 +34,12 @@
         <button data-view="orders">🧾 Orders</button>
         <button data-view="users">👥 Sellers &amp; Users</button>
         <button data-view="banners">📢 Ad Banners</button>
+        <button data-view="resets">🔑 Password Resets</button>
       </nav>
       <div style="margin-top:24px;border-top:1px solid rgba(255,255,255,.1);padding-top:16px">
         <div class="admin-nav">
           <button type="button" onclick="location.href='index.html'">🏬 View Store</button>
+          <button type="button" id="btnAdminChangePw">🔑 Change My Password</button>
           <button type="button" id="btnLogout" style="color:#ffb4b4">🚪 Logout</button>
         </div>
       </div>
@@ -108,6 +110,14 @@
             <small id="bnMaxNote" style="color:var(--muted)"></small>
           </div>
           <div class="table-wrap"><table class="data" id="bannersTable"></table></div>
+        </div>
+      </section>
+
+      <section id="view-resets" class="hidden">
+        <div class="panel">
+          <h3>Password Reset Requests</h3>
+          <p style="color:var(--muted);font-size:.88rem;margin-bottom:12px"><b>Before you reset a password, make sure the request is really from the account owner</b> (call or message the number and ask something only they would know, such as a recent order reference). The temporary password is shown once. Send it only to the person you verified. A moderator's own password can't be reset here; the project owner does that in Supabase.</p>
+          <div class="table-wrap"><table class="data" id="resetsTable"></table></div>
         </div>
       </section>
 

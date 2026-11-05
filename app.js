@@ -129,6 +129,7 @@
     $("#carNext").addEventListener("click", () => goToSlide(state.carouselIndex + 1));
 
     const carousel = $("#carousel");
+    // one delegated handler: counts ad clicks and makes the house slide buttons work
     carousel.addEventListener("click", (e) => {
       const ad = e.target.closest("[data-ad-id]");
       if (ad) { S.trackBanner(ad.dataset.adId, "click"); return; }
@@ -155,6 +156,7 @@
     }
   }
 
+  // paid banners go first, then the built-in slides
   async function loadBanners() {
     try {
       const [allAds, maxAds] = await Promise.all([S.getLiveBanners(), S.getMaxBanners()]);
@@ -166,7 +168,7 @@
       ];
       renderSlides();
     } catch (err) {
-      console.warn("Could not load ad banners:", err);
+      console.warn("Could not load ad banners (run supabase-banners.sql if you haven't):", err);
     }
   }
 
@@ -186,14 +188,11 @@
     $("#drawerUserName").textContent = currentUser ? name : "Welcome";
     $("#drawerUserSub").textContent = currentUser ? `Role: ${currentUser.profile?.role || "customer"}` : "Sign in to ShopSphere";
     $("#drawerAvatar").textContent = currentUser ? name.trim().charAt(0).toUpperCase() || "S" : "S";
-
-    // Target audience rule: Unsigned visitors or logged-in customers see the seller promo banner. Sellers and moderators do not.
-    const userRole = currentUser ? currentUser.profile?.role : null;
-    const isSellerOrModerator = userRole === "seller" || userRole === "moderator";
-
-    $("#btnSellerSignupPrompt").classList.toggle("hidden", isSellerOrModerator);
-    $("#btnDrawerSellerDashboard").classList.toggle("hidden", userRole !== "seller");
-    $("#sellerAlertBanner").classList.toggle("hidden", isSellerOrModerator || sellerBannerDismissed);
+    const isSeller = currentUser && currentUser.profile?.role === "seller";
+    $("#btnSellerSignupPrompt").classList.toggle("hidden", Boolean(isSeller));
+    $("#btnDrawerSellerDashboard").classList.toggle("hidden", !isSeller);
+    $("#btnDrawerChangePw").classList.toggle("hidden", !currentUser);
+    $("#sellerAlertBanner").classList.toggle("hidden", Boolean(isSeller) || sellerBannerDismissed);
   }
 
   function dismissSellerBanner() {
@@ -256,6 +255,7 @@
     }
   }
 
+  // drop deleted products from the saved cart and clamp quantities to available stock
   function reconcileCart() {
     const cart = S.getCart();
     const next = cart
@@ -280,6 +280,7 @@
       case "price-asc": list.sort((a, b) => sellPrice(a) - sellPrice(b)); break;
       case "price-desc": list.sort((a, b) => sellPrice(b) - sellPrice(a)); break;
       case "rating": list.sort((a, b) => (b.rating || 4) - (a.rating || 4)); break;
+      // paid "Featured" listings sit at the top of Newest, then newest first
       default: list.sort((a, b) => (Number(b.isFeatured) - Number(a.isFeatured)) || ((b.createdAt || 0) - (a.createdAt || 0)));
     }
     return list;
@@ -482,6 +483,7 @@
       }
       const order = await S.createOrder(customer, cart);
 
+      S.notifyOrder(order.id); // not awaited: checkout must never wait for an SMS
       const message = [
         "*New ShopSphere Campus Order* 🛒",
         `Order Reference ID: *${order.reference}*`,
@@ -687,22 +689,27 @@
       ? role === "seller" ? "Register as Seller" : "Create Account"
       : "Sign in";
     $("#authPassword").autocomplete = isSignUp ? "new-password" : "current-password";
+    $("#authForgotWrap").classList.toggle("hidden", isSignUp);
+    $("#authPrivacyNote").classList.toggle("hidden", !isSignUp);
   }
 
   function wireEvents() {
+    // Gateway choices
     $("#btnGatewayBuyer").addEventListener("click", () => {
       $("#gatewayModal").classList.remove("open");
       $("#overlay").classList.remove("open");
     });
-    $("#btnDrawerCart").addEventListener("click", () => {
-      closeDrawer("mobileDrawer");
-      openCart();
-    });
+$("#btnDrawerCart").addEventListener("click", () => {
+  closeDrawer("mobileDrawer");
+  openCart();
+});
+
 
     $("#btnGatewaySeller").addEventListener("click", () => {
       window.location.href = "management-seller.html";
     });
 
+    // Seller Prompts
     $("#btnBannerSellerSignUp").addEventListener("click", () => {
       dismissSellerBanner();
       openSellerAuthModal();
@@ -713,6 +720,7 @@
       openSellerAuthModal();
     });
 
+    // Tracking
     $("#btnTrackOrder").addEventListener("click", () => openTrackModal());
     $("#btnDrawerTrack").addEventListener("click", () => {
       closeDrawer("mobileDrawer");
@@ -748,6 +756,16 @@
         setAuthMode("signin", "customer");
         openModal("authModal");
       }
+    });
+
+    $("#authForgotLink").addEventListener("click", (e) => {
+      e.preventDefault();
+      closeModal("authModal");
+      S.openForgotPasswordModal();
+    });
+    $("#btnDrawerChangePw").addEventListener("click", () => {
+      closeDrawer("mobileDrawer");
+      S.openChangePasswordModal();
     });
 
     $("#authToggleLink").addEventListener("click", (e) => {

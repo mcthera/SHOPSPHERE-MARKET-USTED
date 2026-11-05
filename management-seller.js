@@ -397,6 +397,11 @@
     $$("[data-close-modal='sellerProductModal']").forEach((button) =>
       button.addEventListener("click", closeProductModal)
     );
+    $("#sellerForgotLink").addEventListener("click", (event) => {
+      event.preventDefault();
+      S.openForgotPasswordModal();
+    });
+    $("#btnSellerChangePw").addEventListener("click", () => S.openChangePasswordModal());
     $("#btnSellerLogout").addEventListener("click", async () => {
       try {
         await S.signOut();
