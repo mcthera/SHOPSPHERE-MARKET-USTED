@@ -115,14 +115,21 @@
     if (!user) return null;
 
     const baseColumns = "id, full_name, email, phone_whatsapp, phone_call, role, seller_status";
-    let { data: profile, error } = await supabase
-      .from("profiles")
-      .select(`${baseColumns}, must_change_password`)
-      .eq("id", user.id)
-      .maybeSingle();
-    if (error && (error.code === "42703" || /must_change_password/.test(error.message || ""))) {
-      // password-reset.sql has not been run yet: fall back to the old column list
-      ({ data: profile, error } = await supabase.from("profiles").select(baseColumns).eq("id", user.id).maybeSingle());
+    const profileColumnSets = [
+      `${baseColumns}, must_change_password, avatar_url`,
+      `${baseColumns}, must_change_password`,
+      `${baseColumns}, avatar_url`,
+      baseColumns,
+    ];
+    let profile;
+    let error;
+    for (const columns of profileColumnSets) {
+      ({ data: profile, error } = await supabase
+        .from("profiles")
+        .select(columns)
+        .eq("id", user.id)
+        .maybeSingle());
+      if (!error || (error.code !== "42703" && !/must_change_password|avatar_url/.test(error.message || ""))) break;
     }
     if (error) throw error;
     if (!profile) {
@@ -300,12 +307,12 @@
     return data;
   }
 
-  async function getMyOrders() {
+async function getMyOrders() {
     const user = await getCurrentUser();
     if (!user) throw new Error("Sign in to see your orders.");
     const { data, error } = await supabase
       .from("orders")
-      .select("id, reference, items, total, status, created_at")
+      .select("id, reference, items, total, status, created_at, is_archived_customer")
       .eq("customer_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50);

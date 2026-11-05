@@ -184,10 +184,16 @@
 
   function updateAuthUI() {
     const name = currentUser ? (currentUser.profile?.full_name || currentUser.email || "Guest") : "";
+    const avatarUrl = currentUser?.profile?.avatar_url;
+    const avatarEl = $("#drawerAvatar");
     $("#authLabel").textContent = currentUser ? "Log out" : "Customer Sign in";
     $("#drawerUserName").textContent = currentUser ? name : "Welcome";
     $("#drawerUserSub").textContent = currentUser ? `Role: ${currentUser.profile?.role || "customer"}` : "Sign in to ShopSphere";
-    $("#drawerAvatar").textContent = currentUser ? name.trim().charAt(0).toUpperCase() || "S" : "S";
+    if (currentUser && avatarUrl) {
+      avatarEl.innerHTML = `<img src="${escapeHTML(avatarUrl)}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" />`;
+    } else {
+      avatarEl.textContent = currentUser ? name.trim().charAt(0).toUpperCase() || "S" : "S";
+    }
     const isSeller = currentUser && currentUser.profile?.role === "seller";
     $("#btnSellerSignupPrompt").classList.toggle("hidden", Boolean(isSeller));
     $("#btnDrawerSellerDashboard").classList.toggle("hidden", !isSeller);
@@ -573,7 +579,7 @@
     await lookupOrder($("#trackInput").value.trim());
   }
 
-  async function loadMyOrders() {
+async function loadMyOrders() {
     const list = $("#myOrdersList");
     if (!currentUser) {
       list.innerHTML = '<p style="color:var(--muted);font-size:.9rem">Sign in to see all your orders here.</p>';
@@ -582,21 +588,53 @@
     list.textContent = "Loading…";
     try {
       const orders = await S.getMyOrders();
-      if (!orders.length) {
-        list.innerHTML = '<p style="color:var(--muted);font-size:.9rem">No orders yet on this account.</p>';
+      // Filter out archived orders
+      const activeOrders = orders.filter((order) => !order.is_archived_customer);
+
+      if (!activeOrders.length) {
+        list.innerHTML = '<p style="color:var(--muted);font-size:.9rem">No orders found in your history.</p>';
         return;
       }
-      list.innerHTML = orders.map((order) => `
-        <button type="button" data-order-ref="${escapeHTML(order.reference)}" style="display:flex;width:100%;justify-content:space-between;align-items:center;gap:8px;text-align:left;padding:10px 12px;margin-bottom:8px;border:1px solid var(--line);border-radius:10px;background:#fff">
-          <span><strong>${escapeHTML(order.reference)}</strong><br><small style="color:var(--muted)">${escapeHTML(new Date(order.created_at).toLocaleDateString())} · ${S.formatPrice(order.total)}</small></span>
-          <span class="status-pill status-${escapeHTML(order.status)}">${escapeHTML(order.status)}</span>
-        </button>`).join("");
+
+      list.innerHTML = activeOrders.map((order) => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <button type="button" data-order-ref="${escapeHTML(order.reference)}" 
+            style="flex:1;display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff">
+            <span>
+              <strong>${escapeHTML(order.reference)}</strong><br>
+              <small style="color:var(--muted)">${escapeHTML(new Date(order.created_at).toLocaleDateString())} · ${S.formatPrice(order.total)}</small>
+            </span>
+            <span class="status-pill status-${escapeHTML(order.status)}">${escapeHTML(order.status)}</span>
+          </button>
+          <button type="button" class="btn btn--danger btn--sm" data-delete-order="${escapeHTML(order.id)}" title="Delete Order from History" style="padding: 8px 10px;">🗑️</button>
+        </div>`).join("");
+
+      // Wire up track reference clicks
       $$("[data-order-ref]", list).forEach((button) =>
         button.addEventListener("click", () => {
           $("#trackInput").value = button.dataset.orderRef;
           lookupOrder(button.dataset.orderRef);
         })
       );
+
+      // Wire up archive / delete clicks
+      $$("[data-delete-order]", list).forEach((button) => {
+        button.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          if (!confirm("Delete this order from your order history?")) return;
+          button.disabled = true;
+          try {
+            const { error } = await S.supabase.rpc("archive_customer_order", { p_order_id: button.dataset.deleteOrder });
+            if (error) throw error;
+            S.toast("Order removed from history.");
+            await loadMyOrders();
+          } catch (err) {
+            console.error("Could not delete order:", err);
+            S.toast(err.message || "Could not delete order.", "error");
+            button.disabled = false;
+          }
+        });
+      });
     } catch (err) {
       console.error("Could not load orders:", err);
       list.textContent = S.friendlyError(err) || "Could not load your orders.";
