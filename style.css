@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400;500;600;700;800&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 /* =========================================================
    ShopSphere Campus — red & white
@@ -33,19 +33,31 @@
   --shadow: 0 1px 2px rgba(92, 6, 21, .05), 0 6px 20px rgba(92, 6, 21, .06);
   --shadow-lg: 0 18px 50px rgba(60, 5, 15, .28);
 
-  --font-display: "Bricolage Grotesque", "Figtree", system-ui, sans-serif;
-  --font-body: "Figtree", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  
+  /* Font Sizes */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.35rem;
+  --fs-2xl: 1.75rem;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
-body {
-  font-family: var(--font-body);
-  color: var(--ink);
-  background: var(--bg);
-  line-height: 1.5;
+html {
+  font-family: var(--font-sans);
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+body {
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  color: var(--ink, #1f2937);
+  letter-spacing: -0.01em;
 }
 img { display: block; max-width: 100%; }
 button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
@@ -118,7 +130,7 @@ ul { list-style: none; }
 }
 .header__main {
   display: grid; align-items: center; gap: 14px; padding: 12px 0; min-width: 0;
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas: "menu logo search cart";
 }
 .header .hamburger { grid-area: menu; }
@@ -154,19 +166,44 @@ ul { list-style: none; }
 .search__box button:hover { background: #000; }
 .search__box button svg { display: block; }
 
-/* cart */
+/* cart & track button customizations */
 .header__actions { display: flex; align-items: center; gap: 8px; }
 .icon-btn {
   position: relative; display: inline-flex; align-items: center; gap: 8px;
   padding: 9px 14px; border-radius: 12px; font-weight: 700; color: var(--ink);
 }
-.header .icon-btn { background: rgba(255, 255, 255, .16); color: #fff; min-height: 42px; }
-.header .icon-btn:hover { background: rgba(255, 255, 255, .28); }
-.icon-btn .count {
-  position: absolute; top: -6px; right: -6px; background: #fff; color: var(--red-dark);
+
+/* Track Order Button Styling */
+#btnTrackOrder {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.2s ease;
+  min-height: 42px;
+}
+#btnTrackOrder:hover {
+  background: #ffffff !important;
+  color: var(--red-dark, #c8102e) !important;
+}
+
+/* Cart Button Styling (High Visibility Accent) */
+#btnCart {
+  background: #22c55e !important; /* Fresh WhatsApp/Green Accent */
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+  transition: all 0.2s ease;
+  min-height: 42px;
+}
+#btnCart:hover {
+  background: #16a34a !important;
+  transform: translateY(-1px);
+}
+#btnCart .count {
+  position: absolute; top: -6px; right: -6px; background: #ffffff !important; color: #16a34a !important;
   font-size: .7rem; min-width: 20px; height: 20px; border-radius: 999px;
   display: grid; place-items: center; padding: 0 5px; font-weight: 800;
-  box-shadow: 0 0 0 2px var(--red);
+  box-shadow: 0 0 0 2px #16a34a;
 }
 
 /* =========================================================
@@ -552,3 +589,7 @@ div.slide--ad { cursor: default; }
 /* featured listings + verified sellers */
 .card__feat { position: absolute; left: 9px; bottom: 9px; background: #f59e0b; color: #fff; font-size: .72rem; font-weight: 800; padding: 3px 8px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
 .verified-badge { display: inline-block; background: #dcfce7; color: #166534; font-size: .68rem; font-weight: 800; padding: 1px 6px; border-radius: 999px; white-space: nowrap; vertical-align: middle; }
+h1, h2, h3, h4, .logo {
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
