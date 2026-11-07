@@ -478,7 +478,6 @@
       indexNumber: String(formData.get("indexNumber") || "").trim() || "Not provided"
     };
     submitButton.disabled = true;
-    const whatsappWindow = window.open("about:blank", "_blank");
 
     try {
       if (!currentUser) {
@@ -490,32 +489,16 @@
       const order = await S.createOrder(customer, cart);
 
       S.notifyOrder(order.id); // not awaited: checkout must never wait for an SMS
-      const message = [
-        "*New ShopSphere Campus Order* 🛒",
-        `Order Reference ID: *${order.reference}*`,
-        `Name: ${customer.name}`,
-        `Phone: ${customer.phone}`,
-        `Class: ${customer.className}`,
-        `Index Number: ${customer.indexNumber}`,
-        `Location: ${customer.address}`,
-        "",
-        "*Items Ordered:*",
-        ...(order.items || []).map((item) => `• ${item.title} (x${item.qty}) — ${S.formatPrice(item.price * item.qty)}`),
-        "",
-        `*Total: ${S.formatPrice(order.total)}*`,
-      ].join("\n");
+      const groups = buildSellerGroups(order, customer);
 
       S.saveCart([]);
       updateCartCount();
       renderCart();
       closeModal("checkoutModal");
       closeDrawer("cartDrawer");
-      const url = `https://wa.me/233597787700?text=${encodeURIComponent(message)}`;
-      if (whatsappWindow) whatsappWindow.location.href = url;
-      showOrderSuccess(order, url);
+      showOrderSuccess(order, groups);
       await fetchAndRenderProducts();
     } catch (err) {
-      if (whatsappWindow) whatsappWindow.close();
       console.error("Order failed:", err);
       S.toast(S.friendlyError(err) || "Could not save your order.", "error", 7000);
       if (/anonymous sign-ins are disabled/i.test(String(err?.message))) {
@@ -649,9 +632,70 @@ async function loadMyOrders() {
     if (prefillReference) lookupOrder(prefillReference);
   }
 
-  function showOrderSuccess(order, whatsappUrl) {
+  const SUPPORT_WHATSAPP = "233597787700";
+
+  function buildSellerGroups(order, customer) {
+    const groups = new Map();
+    for (const item of order.items || []) {
+      const product = loadedProducts.find((entry) => entry.id === item.product_id);
+      const phone = S.whatsappNumber(product?.seller_phone) || SUPPORT_WHATSAPP;
+      const key = item.seller_id || phone;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          name: product?.seller_name || "ShopSphere support",
+          phone,
+          items: [],
+        });
+      }
+      groups.get(key).items.push(item);
+    }
+
+    return [...groups.values()].map((group) => {
+      const subtotal = group.items.reduce(
+        (sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0),
+        0
+      );
+      const message = [
+        `Hello ${group.name}, I just placed an order on ShopSphere 🛒`,
+        `Order Reference ID: *${order.reference}*`,
+        "",
+        "*Items I ordered from you:*",
+        ...group.items.map((item) => `• ${item.title} (x${item.qty}) — ${S.formatPrice(item.price * item.qty)}`),
+        "",
+        `*Total for your items: ${S.formatPrice(subtotal)}*`,
+        "",
+        `Name: ${customer.name}`,
+        `Phone: ${customer.phone}`,
+        `Class: ${customer.className}`,
+        `Index Number: ${customer.indexNumber}`,
+        `Location: ${customer.address}`,
+        "",
+        "Payment on delivery. Please confirm when we can meet. Thank you!",
+      ].join("\n");
+      return {
+        ...group,
+        subtotal,
+        url: `https://wa.me/${group.phone}?text=${encodeURIComponent(message)}`,
+      };
+    });
+  }
+
+  function showOrderSuccess(order, groups) {
     $("#successRef").textContent = order.reference;
-    $("#btnSuccessWhatsApp").href = whatsappUrl;
+    $("#successWhatsappHint").textContent = groups.length > 1
+      ? `Your items come from ${groups.length} sellers. Tap each button below to send that seller their part of the order.`
+      : "Tap the button to send your order details to the seller on WhatsApp.";
+    const list = $("#successWhatsappList");
+    list.innerHTML = groups.map((group, index) => `
+      <a class="btn btn--green btn--block" href="${escapeHTML(group.url)}" target="_blank" rel="noopener" data-seller-index="${index}">
+        💬 Send to ${escapeHTML(group.name)} (${group.items.length} item${group.items.length === 1 ? "" : "s"})
+      </a>`).join("");
+    $$("[data-seller-index]", list).forEach((link) =>
+      link.addEventListener("click", () => {
+        const group = groups[Number(link.dataset.sellerIndex)];
+        link.textContent = `✅ Opened WhatsApp for ${group.name}`;
+      })
+    );
     $("#btnCopyRef").textContent = "📋 Copy reference";
     $("#btnCopyRef").dataset.ref = order.reference;
     $("#btnSuccessTrack").dataset.ref = order.reference;

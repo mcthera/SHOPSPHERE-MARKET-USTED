@@ -77,15 +77,13 @@
   <!-- ============ SLIDE-OUT MENU ============ -->
   <aside class="drawer drawer--left" id="mobileDrawer" aria-label="Menu">
     <div class="drawer__head drawer__head--brand">
-<div class="drawer__user">
-  <div class="avatar" id="drawerAvatar" style="overflow:hidden;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--red-dark);color:#fff;font-weight:bold;">
-    S
-  </div>
-  <div>
-    <strong id="drawerUserName">Welcome</strong>
-    <small id="drawerUserSub">Sign in or Join as Seller</small>
-  </div>
-</div>
+      <div class="drawer__user">
+        <span class="avatar" id="drawerAvatar">S</span>
+        <div>
+          <strong id="drawerUserName">Welcome</strong>
+          <small id="drawerUserSub">Sign in or Join as Seller</small>
+        </div>
+      </div>
       <button class="close-x" data-close="mobileDrawer" aria-label="Close menu">×</button>
     </div>
    
@@ -204,7 +202,7 @@
         </ul>
       </div>
     </div>
-    <div class="container footer__bottom">© <span id="year"></span> ShopSphere — POWERED by ARKTECH COMPANY · <a href="terms.html" style="text-decoration:underline">Terms & Safety Guidelines</a> · <a href="privacy.html" style="text-decoration:underline">Privacy Notice</a></div>
+    <div class="container footer__bottom">© <span id="year"></span> ShopSphere — POWERED by ARKTECH COMPANY · <a href="privacy.html" style="text-decoration:underline">Privacy Notice</a></div>
   </footer>
  
   <!-- ============ OVERLAY / CART / MODALS ============ -->
@@ -242,7 +240,8 @@
         <button type="button" class="btn btn--ghost btn--block" id="btnCopyRef">📋 Copy reference</button>
         <p style="font-size:.85rem;color:var(--muted);margin:12px 0">Save this reference. You can also find the order under <strong>Track</strong> any time you are signed in on this device.</p>
         <div style="display:flex;flex-direction:column;gap:10px">
-          <a class="btn btn--green btn--block" id="btnSuccessWhatsApp" href="#" target="_blank" rel="noopener">💬 Send order on WhatsApp</a>
+          <p id="successWhatsappHint" style="font-size:.85rem;color:var(--muted);text-align:left"></p>
+          <div id="successWhatsappList" style="display:flex;flex-direction:column;gap:10px"></div>
           <button type="button" class="btn btn--primary btn--block" id="btnSuccessTrack">📦 Track this order</button>
         </div>
       </div>
@@ -298,7 +297,7 @@
           </div>
           <p id="authForgotWrap" style="text-align:right;margin:-4px 0 12px;font-size:.88rem"><a href="#" id="authForgotLink" style="color:var(--red);font-weight:700">Forgot password?</a></p>
           <button type="submit" class="btn btn--primary btn--block" id="authSubmitBtn">Sign in</button>
-          <p id="authPrivacyNote" class="hidden" style="margin-top:10px;font-size:.8rem;color:var(--muted);text-align:center">By creating an account you agree to our <a href="terms.html" target="_blank" rel="noopener" style="color:var(--red);font-weight:700">Terms & Safety Guidelines</a> and <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--red);font-weight:700">Privacy Notice</a>.</p>
+          <p id="authPrivacyNote" class="hidden" style="margin-top:10px;font-size:.8rem;color:var(--muted);text-align:center">By creating an account you agree to our <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--red);font-weight:700">Privacy Notice</a>.</p>
         </form>
         <p style="margin-top:14px;text-align:center;font-size:.88rem">
           <span id="authToggleText">Don't have an account?</span>
