@@ -467,6 +467,14 @@
     const cart = S.getCart();
     if (!cart.length) return;
 
+    let sellerGroups;
+    try {
+      sellerGroups = getSellerGroups(cart);
+    } catch (err) {
+      S.toast(err.message, "error", 6000);
+      return;
+    }
+
     const form = $("#checkoutForm");
     const submitButton = form.querySelector('button[type="submit"]');
     const formData = new FormData(form);
@@ -489,7 +497,7 @@
       const order = await S.createOrder(customer, cart);
 
       S.notifyOrder(order.id); // not awaited: checkout must never wait for an SMS
-      const groups = buildSellerGroups(order, customer);
+      const groups = buildSellerGroups(order, customer, sellerGroups);
 
       S.saveCart([]);
       updateCartCount();
@@ -632,25 +640,42 @@ async function loadMyOrders() {
     if (prefillReference) lookupOrder(prefillReference);
   }
 
-  const SUPPORT_WHATSAPP = "233597787700";
-
-  function buildSellerGroups(order, customer) {
+  function getSellerGroups(cart) {
     const groups = new Map();
-    for (const item of order.items || []) {
-      const product = loadedProducts.find((entry) => entry.id === item.product_id);
-      const phone = S.whatsappNumber(product?.seller_phone) || SUPPORT_WHATSAPP;
-      const key = item.seller_id || phone;
+    for (const cartItem of cart) {
+      const product = loadedProducts.find((entry) => entry.id === cartItem.id);
+      if (!product) {
+        throw new Error("A cart item is no longer available. Refresh the page and try again.");
+      }
+      const phone = S.whatsappNumber(product.seller_phone);
+      if (!phone) {
+        throw new Error(`Can't send this order to ${product.seller_name || "the seller"}: their WhatsApp number is missing.`);
+      }
+      const key = product.seller_id || product.id;
       if (!groups.has(key)) {
         groups.set(key, {
-          name: product?.seller_name || "ShopSphere support",
+          name: product.seller_name || "Seller",
           phone,
+          products: [],
           items: [],
         });
       }
-      groups.get(key).items.push(item);
+      groups.get(key).products.push({ product, quantity: cartItem.qty });
     }
+    return [...groups.values()];
+  }
 
-    return [...groups.values()].map((group) => {
+  function buildSellerGroups(order, customer, sellerGroups) {
+    const orderItems = Array.isArray(order.items) ? order.items : [];
+    return sellerGroups.map((group) => {
+      group.items = group.products.map(({ product, quantity }) => {
+        const orderItem = orderItems.find((item) => item.product_id === product.id);
+        return orderItem || {
+          title: product.title,
+          qty: quantity,
+          price: sellPrice(product),
+        };
+      });
       const subtotal = group.items.reduce(
         (sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0),
         0
