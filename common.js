@@ -381,7 +381,7 @@ async function getMyOrders() {
       button.disabled = true;
       try {
         await changePassword(first);
-        toast("Password changed ✅");
+        toast("Password changed");
         close();
       } catch (err) {
         console.error("Could not change password:", err);
@@ -411,9 +411,9 @@ async function getMyOrders() {
         modal.querySelector("#ssForgotForm").classList.add("hidden");
         const done = modal.querySelector("#ssForgotDone");
         done.classList.remove("hidden");
-        done.innerHTML = `<p style="font-weight:700;margin-bottom:8px">Request sent ✅</p>
+        done.innerHTML = `<p style="font-weight:700;margin-bottom:8px"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Request sent</p>
           <p style="color:var(--muted);margin-bottom:12px">If that number is registered, the moderators can now see your request. To speed things up, message them on WhatsApp so they can confirm it's you.</p>
-          <a class="btn btn--green btn--block" target="_blank" rel="noopener" href="https://wa.me/233597787700?text=${text}">💬 Message the moderators</a>`;
+          <a class="btn btn--green btn--block" target="_blank" rel="noopener" href="https://wa.me/233597787700?text=${text}"><i class="bi bi-whatsapp" aria-hidden="true"></i> Message the moderators</a>`;
       } catch (err) {
         console.error("Reset request failed:", err);
         toast(friendlyError(err), "error", 6000);
@@ -561,11 +561,12 @@ async function getMyOrders() {
     }
     const element = document.createElement("div");
     element.className = `toast toast--${type}`;
-    const dot = document.createElement("span");
-    dot.className = "toast__dot";
+    const icon = document.createElement("i");
+    icon.className = `toast__icon bi ${type === "error" ? "bi-exclamation-circle-fill" : type === "info" ? "bi-info-circle-fill" : "bi-check-circle-fill"}`;
+    icon.setAttribute("aria-hidden", "true");
     const text = document.createElement("span");
     text.textContent = String(message);
-    element.append(dot, text);
+    element.append(icon, text);
     toastHost.appendChild(element);
     requestAnimationFrame(() => element.classList.add("toast--show"));
     setTimeout(() => {

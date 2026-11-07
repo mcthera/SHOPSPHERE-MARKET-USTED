@@ -50,8 +50,8 @@
     const banner = $("#sellerStatusBanner");
     banner.classList.toggle("hidden", approved);
     banner.innerHTML = status === "suspended"
-      ? "<strong>⛔ Account suspended:</strong> Please contact the moderators to restore your seller access."
-      : "<strong style=\"color:#b45309\">⚠️ Account Pending Approval:</strong> Your seller account is under moderator review. You can post listings once approved. This page updates automatically when you return to it.";
+      ? '<strong><i class="bi bi-slash-circle-fill" aria-hidden="true"></i> Account suspended:</strong> Please contact the moderators to restore your seller access.'
+      : '<strong style="color:#b45309"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> Account Pending Approval:</strong> Your seller account is under moderator review. You can post listings once approved. This page updates automatically when you return to it.';
     $("#btnNewListing").disabled = !approved;
   }
 
@@ -65,7 +65,7 @@
       currentUser = fresh;
       applyApprovalState();
       await loadSellerData();
-      if (!wasApproved && fresh.profile.seller_status === "approved") S.toast("Your seller account was approved! 🎉");
+      if (!wasApproved && fresh.profile.seller_status === "approved") S.toast("Your seller account was approved!");
     } catch (err) {
       console.error("Could not refresh seller session:", err);
     }
@@ -118,17 +118,17 @@
     const lowStockCount = myProducts.filter((product) => Number(product.stock) < 3).length;
 
     $("#sellerStatCards").innerHTML = `
-      <div class="stat stat--sales"><div class="stat__icon">💰</div>
+      <div class="stat stat--sales"><div class="stat__icon"><i class="bi bi-cash-stack" aria-hidden="true"></i></div>
         <div class="stat__label">Total Sales</div><div class="stat__value">${S.formatPrice(totalEarnings)}</div></div>
-      <div class="stat stat--prod"><div class="stat__icon">📦</div>
+      <div class="stat stat--prod"><div class="stat__icon"><i class="bi bi-box-seam-fill" aria-hidden="true"></i></div>
         <div class="stat__label">Your Active Listings</div><div class="stat__value">${myProducts.length}</div></div>
-      <div class="stat stat--ord"><div class="stat__icon">🧾</div>
+      <div class="stat stat--ord"><div class="stat__icon"><i class="bi bi-receipt" aria-hidden="true"></i></div>
         <div class="stat__label">Orders Received</div><div class="stat__value">${myOrders.length}</div></div>
-      <div class="stat stat--ord"><div class="stat__icon">📅</div>
+      <div class="stat stat--ord"><div class="stat__icon"><i class="bi bi-calendar-event-fill" aria-hidden="true"></i></div>
         <div class="stat__label">Today's Orders</div><div class="stat__value">${todaysOrders.length}</div></div>
-      <div class="stat stat--sales"><div class="stat__icon">💵</div>
+      <div class="stat stat--sales"><div class="stat__icon"><i class="bi bi-currency-exchange" aria-hidden="true"></i></div>
         <div class="stat__label">Today's Revenue</div><div class="stat__value">${S.formatPrice(todaysRevenue)}</div></div>
-      <div class="stat ${lowStockCount ? "stat--low" : "stat--prod"}"><div class="stat__icon">⚠️</div>
+      <div class="stat ${lowStockCount ? "stat--low" : "stat--prod"}"><div class="stat__icon"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i></div>
         <div class="stat__label">Low Stock (below 3)</div><div class="stat__value">${lowStockCount}</div></div>`;
 
     const recent = myProducts.slice(0, 5);
@@ -153,7 +153,7 @@
     table.innerHTML = `<thead><tr><th>Image</th><th>Title</th><th>Category</th><th>Price</th><th>Inventory</th><th>Actions</th></tr></thead>
       <tbody>${myProducts.map((product) => `<tr>
         <td>${product.images?.[0] ? `<img src="${escapeHTML(product.images[0])}" alt="">` : "—"}</td>
-        <td><strong>${escapeHTML(product.title)}</strong>${product.isFeatured ? `<br><span class="badge badge--cat">⭐ Featured until ${escapeHTML(new Date(product.featuredUntil).toLocaleDateString())}</span>` : ""}</td>
+        <td><strong>${escapeHTML(product.title)}</strong>${product.isFeatured ? `<br><span class="badge badge--cat"><i class="bi bi-star-fill" aria-hidden="true"></i> Featured until ${escapeHTML(new Date(product.featuredUntil).toLocaleDateString())}</span>` : ""}</td>
         <td>${escapeHTML(product.category)}</td>
         <td>${S.formatPrice(product.price)}</td>
         <td>
@@ -163,7 +163,7 @@
           ${Number(product.stock) < 3 ? '<br><span class="badge badge--low">Low stock</span>' : ""}
           <label style="display:block;margin-top:5px"><input type="checkbox" data-stock-toggle="${escapeHTML(product.id)}" ${Number(product.stock) > 0 ? "checked" : ""} ${!canManageInventory ? "disabled" : ""}> In stock</label>
         </td>
-        <td><button class="btn btn--ghost btn--sm" data-edit-item="${escapeHTML(product.id)}" ${!canManageInventory ? "disabled" : ""}>✏️ Edit</button> <button class="btn btn--danger btn--sm" data-del-item="${escapeHTML(product.id)}">🗑️ Delete</button></td>
+        <td><button class="btn btn--ghost btn--sm" data-edit-item="${escapeHTML(product.id)}" ${!canManageInventory ? "disabled" : ""}><i class="bi bi-pencil-fill" aria-hidden="true"></i> Edit</button> <button class="btn btn--danger btn--sm" data-del-item="${escapeHTML(product.id)}"><i class="bi bi-trash-fill" aria-hidden="true"></i> Delete</button></td>
       </tr>`).join("")}</tbody>`;
     $$("[data-edit-item]", table).forEach((button) =>
       button.addEventListener("click", () => openProductModal(button.dataset.editItem))
@@ -263,7 +263,7 @@
     $("#sellerProductForm").reset();
     $("#spId").value = product?.id || "";
     $("#sellerModalTitle").textContent = product ? "Edit Listing" : "Post Product";
-    $("#btnSaveListing").textContent = product ? "💾 Save Changes" : "💾 Save Listing";
+    $("#btnSaveListing").querySelector("span").textContent = product ? "Save Changes" : "Save Listing";
     $("#spTitle").value = product?.title || "";
     $("#spCategory").value = product?.category || S.CATEGORIES[0];
     $("#spPrice").value = product?.price ?? "";

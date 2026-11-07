@@ -127,13 +127,13 @@
       profile.role === "seller" && profile.seller_status !== "approved"
     ).length;
     $("#statCards").innerHTML = `
-      <div class="stat stat--prod"><div class="stat__icon">📦</div>
+      <div class="stat stat--prod"><div class="stat__icon"><i class="bi bi-box-seam-fill" aria-hidden="true"></i></div>
         <div class="stat__label">Total Listings</div><div class="stat__value">${allProducts.length}</div></div>
-      <div class="stat stat--sales"><div class="stat__icon">👥</div>
+      <div class="stat stat--sales"><div class="stat__icon"><i class="bi bi-people-fill" aria-hidden="true"></i></div>
         <div class="stat__label">Registered Accounts</div><div class="stat__value">${allProfiles.length}</div></div>
-      <div class="stat stat--ord"><div class="stat__icon">🕒</div>
+      <div class="stat stat--ord"><div class="stat__icon"><i class="bi bi-clock-fill" aria-hidden="true"></i></div>
         <div class="stat__label">Pending Sellers</div><div class="stat__value">${pendingSellers}</div></div>
-      <div class="stat stat--sales"><div class="stat__icon">🧾</div>
+      <div class="stat stat--sales"><div class="stat__icon"><i class="bi bi-receipt" aria-hidden="true"></i></div>
         <div class="stat__label">Platform Orders</div><div class="stat__value">${allOrders.length}</div></div>`;
 
     const recent = allProducts.slice(0, 5);
@@ -153,7 +153,7 @@
           .map((profile) => {
             const status = profile.seller_status || "pending";
             return `<tr>
-              <td><strong>${escapeHTML(profile.full_name || "Unnamed seller")}</strong>${profile.verified ? ' <span class="verified-badge">⭐ Campus Verified</span>' : ""}</td>
+              <td><strong>${escapeHTML(profile.full_name || "Unnamed seller")}</strong>${profile.verified ? ' <span class="verified-badge"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Campus Verified</span>' : ""}</td>
               <td>${escapeHTML(profile.phone_whatsapp || "—")}</td>
               <td><span class="badge ${status === "approved" ? "badge--cat" : "badge--low"}">${escapeHTML(status)}</span></td>
             </tr>`;
@@ -176,13 +176,13 @@
         <td>${S.formatPrice(product.price)}</td>
         <td>${escapeHTML(product.stock)}</td>
         <td style="white-space:nowrap">
-          ${product.isFeatured ? `<span class="badge badge--cat">⭐ until ${escapeHTML(new Date(product.featuredUntil).toLocaleDateString())}</span><br>` : ""}
+          ${product.isFeatured ? `<span class="badge badge--cat"><i class="bi bi-star-fill" aria-hidden="true"></i> until ${escapeHTML(new Date(product.featuredUntil).toLocaleDateString())}</span><br>` : ""}
           <button class="btn btn--ghost btn--sm" data-feature-id="${escapeHTML(product.id)}" data-feature-days="7">+7 days</button>
           <button class="btn btn--ghost btn--sm" data-feature-id="${escapeHTML(product.id)}" data-feature-days="30">+30</button>
           ${product.isFeatured ? `<button class="btn btn--ghost btn--sm" data-feature-id="${escapeHTML(product.id)}" data-feature-days="0" style="color:#b00020">Remove</button>` : ""}
         </td>
         <td>${product.last_updated_at ? escapeHTML(new Date(product.last_updated_at).toLocaleString()) : "—"}</td>
-        <td><button class="btn btn--ghost btn--sm" data-mod-edit="${escapeHTML(product.id)}">Edit</button> <button class="btn btn--danger btn--sm" data-mod-del="${escapeHTML(product.id)}">🗑️ Take Down</button></td>
+        <td><button class="btn btn--ghost btn--sm" data-mod-edit="${escapeHTML(product.id)}"><i class="bi bi-pencil-fill" aria-hidden="true"></i> Edit</button> <button class="btn btn--danger btn--sm" data-mod-del="${escapeHTML(product.id)}"><i class="bi bi-trash-fill" aria-hidden="true"></i> Take Down</button></td>
       </tr>`).join("")}</tbody>`;
     $$("[data-mod-edit]", table).forEach((button) =>
       button.addEventListener("click", () => openProductEditor(button.dataset.modEdit))
@@ -224,9 +224,9 @@
             <td><span class="badge ${isPending ? "badge--low" : "badge--cat"}">${escapeHTML(profile.seller_status || "pending")}</span></td>
             <td>${activeProductCounts[profile.id] || 0}</td>
             <td>${whatsapp} ${isPending
-              ? `<button class="btn btn--green btn--sm" data-approve-id="${escapeHTML(profile.id)}">✅ Approve</button>`
-              : `<button class="btn btn--ghost btn--sm" data-suspend-id="${escapeHTML(profile.id)}">⏸ Suspend</button>`}
-              <button class="btn btn--ghost btn--sm" data-verify-id="${escapeHTML(profile.id)}" data-verify-to="${profile.verified ? "false" : "true"}">${profile.verified ? "Remove ⭐ Campus Verified" : "⭐ Make Campus Verified"}</button></td>
+              ? `<button class="btn btn--green btn--sm" data-approve-id="${escapeHTML(profile.id)}"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Approve</button>`
+              : `<button class="btn btn--ghost btn--sm" data-suspend-id="${escapeHTML(profile.id)}"><i class="bi bi-pause-circle-fill" aria-hidden="true"></i> Suspend</button>`}
+              <button class="btn btn--ghost btn--sm" data-verify-id="${escapeHTML(profile.id)}" data-verify-to="${profile.verified ? "false" : "true"}"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> ${profile.verified ? "Remove Campus Verified" : "Make Campus Verified"}</button></td>
           </tr>`;
         }).join("")}</tbody>`
       : `<tbody><tr><td style="color:var(--muted)">No seller accounts found.</td></tr></tbody>`;
@@ -479,7 +479,7 @@
       const { data, error } = await supabase.from("profiles").update({ verified }).eq("id", sellerId).eq("role", "seller").select("id").maybeSingle();
       if (error) throw error;
       if (!data) throw new Error("Not updated. Check your moderator role and that supabase-featured.sql was run.");
-      S.toast(verified ? "Seller is now Campus Verified ⭐" : "Campus Verified badge removed.");
+      S.toast(verified ? "Seller is now Campus Verified" : "Campus Verified badge removed.");
       await loadPlatformData();
     } catch (err) {
       console.error("Could not update Campus Verified badge:", err);
@@ -752,7 +752,7 @@
   function renderResets(message) {
     const openCount = allResets.filter((request) => request.status === "open").length;
     const navButton = $('.admin-nav [data-view="resets"]');
-    if (navButton) navButton.textContent = openCount ? `🔑 Password Resets (${openCount})` : "🔑 Password Resets";
+    if (navButton) navButton.innerHTML = `<i class="bi bi-key-fill" aria-hidden="true"></i> Password Resets${openCount ? ` (${openCount})` : ""}`;
 
     const table = $("#resetsTable");
     if (message || !allResets.length) {
@@ -839,8 +839,8 @@
         <p style="color:var(--muted)">For <b>${escapeHTML(name || phone || "the user")}</b>. This is shown <b>once</b>. Send it only to the person you verified.</p>
         <div id="tempPwValue" style="font-family:monospace;font-size:1.6rem;font-weight:800;letter-spacing:1px;background:var(--red-soft);border:1px dashed var(--red-line);border-radius:12px;padding:14px;margin:12px 0;user-select:all">${escapeHTML(password)}</div>
         <div style="display:flex;flex-direction:column;gap:10px">
-          <button type="button" class="btn btn--ghost btn--block" id="tempPwCopy">📋 Copy password</button>
-          ${wa ? `<a class="btn btn--green btn--block" target="_blank" rel="noopener" href="https://wa.me/${escapeHTML(wa)}?text=${text}">💬 Send on WhatsApp</a>` : ""}
+          <button type="button" class="btn btn--ghost btn--block" id="tempPwCopy"><i class="bi bi-clipboard-fill" aria-hidden="true"></i> <span>Copy password</span></button>
+          ${wa ? `<a class="btn btn--green btn--block" target="_blank" rel="noopener" href="https://wa.me/${escapeHTML(wa)}?text=${text}"><i class="bi bi-whatsapp" aria-hidden="true"></i> Send on WhatsApp</a>` : ""}
           <button type="button" class="btn btn--primary btn--block" id="tempPwDone">Done</button>
         </div>
       </div></div>`;
@@ -851,7 +851,7 @@
     modal.querySelector("#tempPwCopy").addEventListener("click", async (event) => {
       try {
         await navigator.clipboard.writeText(password);
-        event.target.textContent = "✅ Copied!";
+        event.currentTarget.querySelector("span").textContent = "Copied!";
       } catch (_) {
         S.toast("Press and hold the password to copy it.", "info", 4000);
       }
