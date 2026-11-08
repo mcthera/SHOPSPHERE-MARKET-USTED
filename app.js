@@ -24,14 +24,14 @@
   const sellPrice = (p) => (p.discountPrice > 0 ? p.discountPrice : p.price);
 
   const PLACEHOLDER_IMG = "data:image/svg+xml;utf8," + encodeURIComponent(
-    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><rect width='400' height='400' fill='#f4eeee'/><text x='50%' y='52%' font-size='96' text-anchor='middle'>🛍️</text></svg>"
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><rect width='400' height='400' fill='#f4eeee'/><path d='M140 145h120l18 185H122zm28 0v-24a32 32 0 0 1 64 0v24h-16v-24a16 16 0 0 0-32 0v24z' fill='#c8102e'/></svg>"
   );
   const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const SLIDES = [
-    { title: "Buy and sell on campus", sub: "Textbooks, gadgets, fashion and room essentials from students you can meet today.", tone: "crimson", art: "🎓", cta: "Browse items" },
-    { title: "Got something to sell?", sub: "Open the menu, tap Become a Seller and reach buyers on WhatsApp in minutes.", tone: "deep", art: "📱", cta: "See what's listed", cat: "Mobile" },
-    { title: "Hostel shopping sorted", sub: "Fans, kettles, bedding and more at student-friendly prices.", tone: "bright", art: "🛏️", cta: "Shop home items", cat: "Home" },
+    { title: "Buy and sell on campus", sub: "Textbooks, gadgets, fashion and room essentials from students you can meet today.", tone: "crimson", icon: "bi-mortarboard-fill", cta: "Browse items" },
+    { title: "Got something to sell?", sub: "Open the menu, tap Become a Seller and reach buyers on WhatsApp in minutes.", tone: "deep", icon: "bi-phone-fill", cta: "See what's listed", cat: "Mobile" },
+    { title: "Hostel shopping sorted", sub: "Fans, kettles, bedding and more at student-friendly prices.", tone: "bright", icon: "bi-house-fill", cta: "Shop home items", cat: "Home" },
   ];
 
   async function init() {
@@ -88,7 +88,7 @@
     if (slide.kind !== "ad") {
       return `
       <div class="slide slide--${slide.tone}">
-        <span class="slide__art" aria-hidden="true">${slide.art}</span>
+        <i class="slide__art bi ${slide.icon}" aria-hidden="true"></i>
         <h2>${escapeHTML(slide.title)}</h2><p>${escapeHTML(slide.sub)}</p>
         <button type="button" class="btn btn--white" data-scroll-products${slide.cat ? ` data-slide-cat="${escapeHTML(slide.cat)}"` : ""}>${escapeHTML(slide.cta)}</button>
       </div>`;
@@ -212,12 +212,21 @@
     }
   }
 
-  const CAT_EMOJI = { All: "🛍️", Electronics: "💻", Fashion: "👗", Home: "🏠", Mobile: "📱", Beauty: "💄", Groceries: "🛒", Sports: "⚽" };
+  const CAT_ICONS = {
+    All: "bi-bag-fill",
+    Electronics: "bi-laptop-fill",
+    Fashion: "bi-handbag-fill",
+    Home: "bi-house-fill",
+    Mobile: "bi-phone-fill",
+    Beauty: "bi-brush-fill",
+    Groceries: "bi-basket-fill",
+    Sports: "bi-trophy-fill",
+  };
 
   function buildCategories() {
     $("#catTiles").innerHTML = ["All", ...S.CATEGORIES].map((c) => `
       <button type="button" class="cat-tile${c === state.activeCategory ? " active" : ""}" data-cat="${escapeHTML(c)}" aria-pressed="${c === state.activeCategory}">
-        <span class="emoji" aria-hidden="true">${CAT_EMOJI[c] || "🏷️"}</span>${escapeHTML(c)}
+        <i class="bi ${CAT_ICONS[c] || "bi-tag-fill"}" aria-hidden="true"></i>${escapeHTML(c)}
       </button>`).join("");
     $$("[data-cat]").forEach((btn) =>
       btn.addEventListener("click", () => setCategory(btn.dataset.cat))
@@ -311,7 +320,7 @@
           <img src="${escapeHTML(img)}" alt="${escapeHTML(p.title)}" loading="lazy" />
           <span class="card__tag">${escapeHTML(p.category)}</span>
           ${onSale ? `<span class="card__disc">-${off}%</span>` : ""}
-          ${p.isFeatured ? `<span class="card__feat">⭐ Featured</span>` : ""}
+          ${p.isFeatured ? `<span class="card__feat"><i class="bi bi-star-fill" aria-hidden="true"></i> Featured</span>` : ""}
           ${soldOut ? `<div class="card__soldout">Sold out</div>` : ""}
         </div>
         <div class="card__body">
@@ -320,7 +329,7 @@
             <span class="now">${S.formatPrice(price)}</span>
             ${onSale ? `<span class="was">${S.formatPrice(p.price)}</span>` : ""}
           </div>
-          <p class="card__seller">Sold by <strong>${escapeHTML(p.seller_name || "Seller")}</strong>${p.sellerVerified ? ` <span class="verified-badge" title="Campus Verified by ShopSphere moderators">⭐ Campus Verified</span>` : ""}</p>
+          <p class="card__seller">Sold by <strong>${escapeHTML(p.seller_name || "Seller")}</strong>${p.sellerVerified ? ` <span class="verified-badge" title="Campus Verified by ShopSphere moderators"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Campus Verified</span>` : ""}</p>
           <div class="card__actions">
             <button type="button" class="btn btn--ghost" data-cart-id="${escapeHTML(p.id)}"${soldOut ? " disabled" : ""}>Add to cart</button>
             <button type="button" class="btn btn--primary" data-seller-phone="${escapeHTML(p.seller_phone || "")}" data-seller-title="${escapeHTML(p.title)}">WhatsApp</button>
@@ -339,8 +348,14 @@
   window.contactSeller = function(phone, title) {
     if (!phone) { S.toast("Seller phone number not available", "error"); return; }
     const cleanPhone = S.whatsappNumber(phone);
-    const msg = encodeURIComponent(`Hello! I am interested in buying your item "${title}" listed on ShopSphere.`);
-    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
+    const msg = encodeURIComponent([
+      `Hello! I am interested in buying your item "${title}" listed on ShopSphere.`,
+      "",
+      "Payment warning: Pay only to the ShopSphere management account: 0593263101, Mensah Peter Kofi. Do not pay me directly. If you pay a seller directly, ShopSphere will not be liable for any loss, and you will bear the full consequences."
+    ].join("\n"));
+    $("#btnContinueSellerContact").href = `https://wa.me/${cleanPhone}?text=${msg}`;
+    openModal("sellerContactModal");
+    $("[data-close-modal='sellerContactModal']").focus();
   };
 
   window.addToCart = function(id) {
@@ -359,7 +374,7 @@
     else cart.push({ id, qty: 1 });
     S.saveCart(cart);
     updateCartCount();
-    S.toast("Product added to cart 🛒");
+    S.toast("Product added to cart");
   };
 
   function updateCartCount() {
@@ -379,7 +394,7 @@
     const body = $("#cartBody");
     const foot = $("#cartFoot");
     if (!cart.length) {
-      body.innerHTML = '<div class="empty"><div class="big">🛒</div><p>Your cart is empty.</p></div>';
+      body.innerHTML = '<div class="empty"><div class="big"><i class="bi bi-cart-x" aria-hidden="true"></i></div><p>Your cart is empty.</p></div>';
       foot.innerHTML = "";
       return;
     }
@@ -521,7 +536,7 @@
 
   const STATUS_HINT = {
     Pending: "The seller has your order and is getting it ready.",
-    Shipped: "On its way. Meet the seller and pay on delivery.",
+    Shipped: "On its way. Meet the seller and follow the official ShopSphere payment instructions.",
     Delivered: "Delivered. Thank you for shopping on campus!",
     Canceled: "This order was canceled. Contact the seller on WhatsApp if you have questions.",
   };
@@ -597,7 +612,7 @@ async function loadMyOrders() {
             </span>
             <span class="status-pill status-${escapeHTML(order.status)}">${escapeHTML(order.status)}</span>
           </button>
-          <button type="button" class="btn btn--danger btn--sm" data-delete-order="${escapeHTML(order.id)}" title="Delete Order from History" style="padding: 8px 10px;">🗑️</button>
+          <button type="button" class="btn btn--danger btn--sm" data-delete-order="${escapeHTML(order.id)}" title="Delete Order from History" style="padding: 8px 10px;"><i class="bi bi-trash-fill" aria-hidden="true"></i></button>
         </div>`).join("");
 
       // Wire up track reference clicks
@@ -681,7 +696,7 @@ async function loadMyOrders() {
         0
       );
       const message = [
-        `Hello ${group.name}, I just placed an order on ShopSphere 🛒`,
+        `Hello ${group.name}, I just placed an order on ShopSphere.`,
         `Order Reference ID: *${order.reference}*`,
         "",
         "*Items I ordered from you:*",
@@ -695,7 +710,8 @@ async function loadMyOrders() {
         `Index Number: ${customer.indexNumber}`,
         `Location: ${customer.address}`,
         "",
-        "Payment on delivery. Please confirm when we can meet. Thank you!",
+        "Payment warning: Pay only to the ShopSphere management account: 0593263101, Mensah Peter Kofi. Do not pay the seller directly. If you do, ShopSphere will not be liable for any loss, and you will bear the full consequences.",
+        "Please confirm when we can meet. Thank you!",
       ].join("\n");
       return {
         ...group,
@@ -713,15 +729,16 @@ async function loadMyOrders() {
     const list = $("#successWhatsappList");
     list.innerHTML = groups.map((group, index) => `
       <a class="btn btn--green btn--block" href="${escapeHTML(group.url)}" target="_blank" rel="noopener" data-seller-index="${index}">
-        💬 Send to ${escapeHTML(group.name)} (${group.items.length} item${group.items.length === 1 ? "" : "s"})
+        <i class="bi bi-whatsapp" aria-hidden="true"></i>
+        <span>Send to ${escapeHTML(group.name)} (${group.items.length} item${group.items.length === 1 ? "" : "s"})</span>
       </a>`).join("");
     $$("[data-seller-index]", list).forEach((link) =>
       link.addEventListener("click", () => {
         const group = groups[Number(link.dataset.sellerIndex)];
-        link.textContent = `✅ Opened WhatsApp for ${group.name}`;
+        link.querySelector("span").textContent = `Opened WhatsApp for ${group.name}`;
       })
     );
-    $("#btnCopyRef").textContent = "📋 Copy reference";
+    $("#btnCopyRef").querySelector("span").textContent = "Copy reference";
     $("#btnCopyRef").dataset.ref = order.reference;
     $("#btnSuccessTrack").dataset.ref = order.reference;
     openModal("orderSuccessModal");
@@ -731,7 +748,7 @@ async function loadMyOrders() {
     const ref = $("#btnCopyRef").dataset.ref || "";
     try {
       await navigator.clipboard.writeText(ref);
-      $("#btnCopyRef").textContent = "✅ Copied!";
+      $("#btnCopyRef").querySelector("span").textContent = "Copied!";
     } catch (err) {
       console.warn("Clipboard unavailable:", err);
       const range = document.createRange();
@@ -936,7 +953,7 @@ $("#btnDrawerCart").addEventListener("click", () => {
             location.href = "admin.html";
             return;
           }
-          S.toast("Welcome back! 🎉");
+          S.toast("Welcome back!");
           updateAuthUI();
           closeAll();
         }
@@ -983,6 +1000,7 @@ $("#btnDrawerCart").addEventListener("click", () => {
 
     $("#btnCart").addEventListener("click", openCart);
     $("#checkoutForm").addEventListener("submit", submitWhatsAppOrder);
+    $("#btnContinueSellerContact").addEventListener("click", () => closeModal("sellerContactModal"));
   }
 
   document.addEventListener("DOMContentLoaded", init);
